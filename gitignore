@@ -1,0 +1,14 @@
+# Database backups (can be large and contain data)
+*.dump
+*.backup
+*.bak
+
+# Credentials and local config
+.env
+*.pgpass
+pgpass.conf
+
+# OS / editor files
+.DS_Store
+Thumbs.db
+.vscode/

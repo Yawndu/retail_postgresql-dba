@@ -1,0 +1,107 @@
+Table customers {
+  customer_id integer [pk, increment]
+  first_name varchar(50) [not null]
+  last_name varchar(50) [not null]
+  email varchar(100) [not null, unique]
+  phone varchar(20)
+  address text
+  created_at timestamp [not null, default: `now()`]
+}
+
+Table categories {
+  category_id integer [pk, increment]
+  category_name varchar(100) [not null, unique]
+  description text
+}
+
+Table suppliers {
+  supplier_id integer [pk, increment]
+  supplier_name varchar(150) [not null]
+  contact_name varchar(100)
+  email varchar(100)
+  phone varchar(20)
+  address text
+  created_at timestamp [not null, default: `now()`]
+}
+
+Table products {
+  product_id integer [pk, increment]
+  category_id integer [not null]
+  supplier_id integer [not null]
+  product_name varchar(150) [not null]
+  sku varchar(50) [not null, unique]
+  description text
+  unit_price decimal(10,2) [not null, note: 'CHECK (unit_price >= 0)']
+  created_at timestamp [not null, default: `now()`]
+}
+
+Table warehouses {
+  warehouse_id integer [pk, increment]
+  warehouse_name varchar(100) [not null, unique]
+  location varchar(200) [not null]
+  created_at timestamp [not null, default: `now()`]
+}
+
+Table employees {
+  employee_id integer [pk, increment]
+  warehouse_id integer [not null]
+  first_name varchar(50) [not null]
+  last_name varchar(50) [not null]
+  position varchar(100) [not null]
+  email varchar(100) [not null, unique]
+  hire_date date [not null]
+}
+
+Table inventory {
+  warehouse_id integer [not null]
+  product_id integer [not null]
+  quantity integer [not null, default: 0, note: 'CHECK (quantity >= 0)']
+  reorder_level integer [not null, default: 0, note: 'CHECK (reorder_level >= 0)']
+  last_updated timestamp [not null, default: `now()`]
+
+  indexes {
+    (warehouse_id, product_id) [pk]
+  }
+}
+
+Table orders {
+  order_id integer [pk, increment]
+  customer_id integer [not null]
+  order_date timestamp [not null, default: `now()`]
+  status varchar(30) [not null, default: 'Pending', note: "CHECK (status IN ('Pending','Processing','Shipped','Delivered','Cancelled'))"]
+  total_amount decimal(12,2) [not null, default: 0, note: 'CHECK (total_amount >= 0)']
+}
+
+Table order_items {
+  order_id integer [not null]
+  product_id integer [not null]
+  quantity integer [not null, note: 'CHECK (quantity > 0)']
+  unit_price decimal(10,2) [not null, note: 'Price snapshot at time of sale. CHECK (unit_price >= 0)']
+  subtotal decimal(12,2) [not null, note: 'CHECK (subtotal = quantity * unit_price)']
+
+  indexes {
+    (order_id, product_id) [pk]
+  }
+}
+
+Table stock_movements {
+  movement_id integer [pk, increment]
+  warehouse_id integer [not null]
+  product_id integer [not null]
+  movement_type varchar(30) [not null, note: "CHECK (movement_type IN ('PURCHASE','SALE','RETURN','ADJUSTMENT','TRANSFER_IN','TRANSFER_OUT'))"]
+  quantity integer [not null, note: 'Signed: positive adds stock, negative removes stock. CHECK (quantity <> 0)']
+  reference_id integer [note: 'Polymorphic reference (e.g. order_id). No FK by design.']
+  movement_date timestamp [not null, default: `now()`]
+  notes text
+}
+
+Ref: products.category_id > categories.category_id
+Ref: products.supplier_id > suppliers.supplier_id
+Ref: inventory.warehouse_id > warehouses.warehouse_id
+Ref: inventory.product_id > products.product_id
+Ref: employees.warehouse_id > warehouses.warehouse_id
+Ref: orders.customer_id > customers.customer_id
+Ref: order_items.order_id > orders.order_id
+Ref: order_items.product_id > products.product_id
+Ref: stock_movements.warehouse_id > warehouses.warehouse_id
+Ref: stock_movements.product_id > products.product_id
