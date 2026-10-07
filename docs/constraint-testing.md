@@ -21,7 +21,7 @@ All statements are in [`tests/constraint_tests.sql`](../tests/constraint_tests.s
 | 10 | PRIMARY KEY | Same product twice in the same order | primary key on `order_items (order_id, product_id)` | Rejected |
 | 11 | PRIMARY KEY | Second inventory row for the same warehouse and product | primary key on `inventory (warehouse_id, product_id)` | Rejected |
 | 12 | FOREIGN KEY on insert | Order for a nonexistent customer | `fk_orders_customer` | Rejected |
-| 13 | FOREIGN KEY on insert | Order item for a nonexistent product | `fk_order_items_product` | (fill in) |
+| 13 | FOREIGN KEY on insert | Order item for a nonexistent product | `fk_order_items_product` | Rejected |
 | 14 | FOREIGN KEY on delete | Delete a product that has inventory and sales | a foreign key on `inventory` or `order_items` | Rejected |
 | 15 | FOREIGN KEY on delete | Delete a warehouse that has stock and employees | a foreign key on `inventory`, `employees` or `stock_movements` | Rejected |
 | 16 | CHECK | Product with a negative price | `chk_products_price` | Rejected |
@@ -112,6 +112,7 @@ VALUES ('Test', 'User', 'ana.cruz@example.com');
 ERROR:  duplicate key value violates unique constraint "customers_email_key"
 Key (email)=(ana.cruz@example.com) already exists.
 ```
+![Test 6](../screenshots/constraint-tests/test06_unique_customer_email.png)
 
 ### Test 7: UNIQUE (duplicate product sku)
 **Statement**
@@ -125,6 +126,7 @@ VALUES (1, 1, 'Test Product', 'LAP-0001', 100);
 ERROR:  duplicate key value violates unique constraint "products_sku_key"
 Key (sku)=(LAP-0001) already exists.
 ```
+![Test 7](../screenshots/constraint-tests/test07_unique_product_sku.png)
 
 ### Test 8: NOT NULL (customer without an email)
 **Statement**
@@ -138,6 +140,7 @@ VALUES ('Test', 'User', NULL);
 ERROR:  null value in column "email" of relation "customers" violates not-null constraint
 Failing row contains (9, Test, User, null, null, null, 2026-10-07 14:58:53.68805).
 ```
+![Test 8](../screenshots/constraint-tests/test08_notnull_customer_email.png)
 
 ### Test 9: NOT NULL (product without a name)
 **Statement**
@@ -151,6 +154,7 @@ VALUES (1, 1, NULL, 'TEST-0001', 100);
 ERROR:  null value in column "product_name" of relation "products" violates not-null constraint
 Failing row contains (18, 1, 1, null, TEST-0001, null, 100.00, 2026-10-07 14:59:21.180637).
 ```
+![Test 9](../screenshots/constraint-tests/test09_notnull_product_name.png)
 
 ### Test 10: PRIMARY KEY (same product twice in the same order)
 **Statement**
@@ -164,6 +168,7 @@ VALUES (1, 1, 1, 55000.00, 55000.00);
 ERROR:  duplicate key value violates unique constraint "order_items_pkey"
 Key (order_id, product_id)=(1, 1) already exists.
 ```
+![Test 10](../screenshots/constraint-tests/test10_pk_order_items.png)
 
 ### Test 11: PRIMARY KEY (second inventory row for the same warehouse and product)
 **Statement**
@@ -177,6 +182,7 @@ VALUES (1, 1, 10, 5);
 ERROR:  duplicate key value violates unique constraint "inventory_pkey"
 Key (warehouse_id, product_id)=(1, 1) already exists.
 ```
+![Test 11](../screenshots/constraint-tests/test11_pk_inventory.png)
 
 ### Test 12: FOREIGN KEY on insert (order for a nonexistent customer)
 **Statement**
@@ -189,6 +195,7 @@ INSERT INTO orders (customer_id) VALUES (999);
 ERROR:  insert or update on table "orders" violates foreign key constraint "fk_orders_customer"
 Key (customer_id)=(999) is not present in table "customers".
 ```
+![Test 12](../screenshots/constraint-tests/test12_fk_insert_orders.png)
 
 ### Test 13: FOREIGN KEY on insert (order item for a nonexistent product)
 **Statement**
@@ -200,8 +207,9 @@ VALUES (1, 999, 1, 100.00, 100.00);
 **Result**
 ```
 ERROR:  insert or update on table "order_items" violates foreign key constraint "fk_order_items_product"
-Key (product_id)=(999) is not present in table "products". 
+Key (product_id)=(999) is not present in table "products".
 ```
+![Test 13](../screenshots/constraint-tests/test13_fk_insert_order_items.png)
 
 ### Test 14: FOREIGN KEY on delete (delete a product that has inventory and sales)
 **Statement**
@@ -214,6 +222,7 @@ DELETE FROM products WHERE product_id = 1;
 ERROR:  update or delete on table "products" violates foreign key constraint "fk_inventory_product" on table "inventory"
 Key (product_id)=(1) is still referenced from table "inventory".
 ```
+![Test 14](../screenshots/constraint-tests/test14_fk_delete_product.png)
 
 ### Test 15: FOREIGN KEY on delete (delete a warehouse that has stock and employees)
 **Statement**
@@ -226,6 +235,7 @@ DELETE FROM warehouses WHERE warehouse_id = 1;
 ERROR:  update or delete on table "warehouses" violates foreign key constraint "fk_employee_warehouse" on table "employees"
 Key (warehouse_id)=(1) is still referenced from table "employees".
 ```
+![Test 15](../screenshots/constraint-tests/test15_fk_delete_warehouse.png)
 
 ### Test 16: CHECK (product with a negative price)
 **Statement**
@@ -239,6 +249,7 @@ VALUES (1, 1, 'Test Product', 'TEST-0003', -500);
 ERROR:  new row for relation "products" violates check constraint "chk_products_price"
 Failing row contains (19, 1, 1, Test Product, TEST-0003, null, -500.00, 2026-10-07 15:02:04.336866).
 ```
+![Test 16](../screenshots/constraint-tests/test16_check_product_price.png)
 
 ### Test 17: CHECK (order with a negative total)
 **Statement**
@@ -251,6 +262,7 @@ INSERT INTO orders (customer_id, total_amount) VALUES (1, -1);
 ERROR:  new row for relation "orders" violates check constraint "chk_orders_total"
 Failing row contains (11, 1, 2026-10-07 15:02:13.891892, Pending, -1.00).
 ```
+![Test 17](../screenshots/constraint-tests/test17_check_order_total.png)
 
 ### Test 18: CHECK (order item whose subtotal is not quantity x unit price)
 **Statement**
@@ -264,6 +276,7 @@ VALUES (1, 2, 1, 42000.00, 1.00);
 ERROR:  new row for relation "order_items" violates check constraint "chk_order_items_subtotal"
 Failing row contains (1, 2, 1, 42000.00, 1.00).
 ```
+![Test 18](../screenshots/constraint-tests/test18_check_subtotal.png)
 
 ### Test 19: CHECK (order item with a negative unit price)
 **Statement**
@@ -277,6 +290,7 @@ VALUES (1, 2, 1, -5.00, -5.00);
 ERROR:  new row for relation "order_items" violates check constraint "chk_order_items_price"
 Failing row contains (1, 2, 1, -5.00, -5.00).
 ```
+![Test 19](../screenshots/constraint-tests/test19_check_item_price.png)
 
 ### Test 20: CHECK (negative stock level)
 **Statement**
@@ -289,6 +303,7 @@ UPDATE inventory SET quantity = -1 WHERE warehouse_id = 1 AND product_id = 1;
 ERROR:  new row for relation "inventory" violates check constraint "chk_inventory_quantity"
 Failing row contains (1, 1, -1, 5, 2026-10-06 14:39:56.566359).
 ```
+![Test 20](../screenshots/constraint-tests/test20_check_inventory_quantity.png)
 
 ### Test 21: CHECK (stock movement with an invalid type)
 **Statement**
@@ -302,6 +317,7 @@ VALUES (1, 1, 'DAMAGED', -1);
 ERROR:  new row for relation "stock_movements" violates check constraint "chk_movements_type"
 Failing row contains (9, 1, 1, DAMAGED, -1, null, 2026-10-07 15:02:57.730599, null).
 ```
+![Test 21](../screenshots/constraint-tests/test21_check_movement_type.png)
 
 ### Test 22: CHECK (stock movement with quantity 0)
 **Statement**
@@ -315,6 +331,7 @@ VALUES (1, 1, 'ADJUSTMENT', 0);
 ERROR:  new row for relation "stock_movements" violates check constraint "chk_movements_quantity"
 Failing row contains (10, 1, 1, ADJUSTMENT, 0, null, 2026-10-07 15:03:07.953191, null).
 ```
+![Test 22](../screenshots/constraint-tests/test22_check_movement_quantity.png)
 
 ## Findings
 - Every constraint type in the schema (UNIQUE, NOT NULL, PRIMARY KEY, FOREIGN KEY, CHECK) is covered by at least one test.
