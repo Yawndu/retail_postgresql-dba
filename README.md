@@ -25,7 +25,7 @@ Design notes:
 - [x] Database design (ERD)
 - [x] Schema, constraints, sample data
 - [x] Constraint testing
-- [ ] Analytical queries
+- [x] Analytical queries ([details](docs/analytical-queries.md))
 - [ ] Security roles and least privilege
 - [ ] Performance tuning (EXPLAIN ANALYZE, indexing)
 - [ ] Backup and recovery (RPO/RTO)
