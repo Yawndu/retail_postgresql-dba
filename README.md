@@ -26,7 +26,7 @@ Design notes:
 - [x] Schema, constraints, sample data
 - [x] Constraint testing ([details](docs/constraint-testing.md))
 - [x] Analytical queries ([details](docs/analytical-queries.md))
-- [ ] Security roles and least privilege
+- [x] Security roles and least privilege ([details](docs/security.md))
 - [ ] Performance tuning (EXPLAIN ANALYZE, indexing)
 - [ ] Backup and recovery (RPO/RTO)
 - [ ] Monitoring
