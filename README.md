@@ -24,7 +24,7 @@ Design notes:
 ## Status
 - [x] Database design (ERD)
 - [x] Schema, constraints, sample data
-- [x] Constraint testing
+- [x] Constraint testing ([details](docs/constraint_testing.md))
 - [x] Analytical queries ([details](docs/analytical-queries.md))
 - [ ] Security roles and least privilege
 - [ ] Performance tuning (EXPLAIN ANALYZE, indexing)
