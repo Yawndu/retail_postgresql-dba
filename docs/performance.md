@@ -122,6 +122,11 @@ CREATE INDEX idx_stock_movements_product_wh_date
 | Execution time | 0.063 ms | 0.062 ms |
 
 ![P2 with single index](../performance/experiments/p2_single_index.png)
+
+
+
+
+
 ![P2 with composite](../performance/experiments/p2_with_composite.png)
 
 **Decision: dropped.** Each customer has only about 8 orders, so sorting them costs almost nothing and the composite saved no work. It would add disk space and slow inserts and updates for no measurable gain. This contrasts with P4, where the composite index removed a sort over many rows and allowed the query to stop after 20 rows.
@@ -137,6 +142,11 @@ CREATE INDEX idx_stock_movements_product_wh_date
 | Index size | n/a | 2,080 kB |
 
 ![P5 before](../performance/experiments/p5_before_status_index.png)
+
+
+
+
+
 ![P5 with status index](../performance/experiments/p5_with_status_index.png)
 
 **Decision: dropped.** The index made the count about 6.5x faster, but the query was already fast (about 34 ms on 300,000 orders). The `status` column changes every time an order moves through its lifecycle, so each change would also have to update the index. The gain did not justify that ongoing cost for this workload. If a dashboard ran this count constantly, the decision could reasonably go the other way.
