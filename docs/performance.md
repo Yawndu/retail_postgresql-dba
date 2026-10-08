@@ -4,7 +4,7 @@
 Find slow queries with `EXPLAIN (ANALYZE, BUFFERS)`, add indexes only where the plan and the measurements justify them, and record the results.
 
 - Data generator: [`data/generate_data.sql`](../data/generate_data.sql)
-- Experiments run: [`performance/performance_experiments.sql`](../performance/performance_experiments.sql)
+- Experiments run: [`performance/experiments.sql`](../performance/experiments.sql)
 - Indexes kept: [`database/06_indexes.sql`](../database/06_indexes.sql)
 
 ## Dataset
