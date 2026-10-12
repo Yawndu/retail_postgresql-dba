@@ -7,12 +7,13 @@ Design and administer a production-style PostgreSQL database for a retail invent
 A small computer-hardware retailer with two warehouses needs to track customers, products, suppliers, inventory, orders, and stock movements.
 
 ## Tech
-- PostgreSQL
+- PostgreSQL 18
 - pgAdmin 4
 - dbdiagram.io (ERD)
+- `pg_dump` / `pg_restore`
 
 ## Database Design
-![ERD](diagrams/erd.png)
+![ERD](database/01_erd/erd.png)
 
 The model has 10 tables: `customers`, `categories`, `suppliers`, `products`, `warehouses`, `employees`, `inventory`, `orders`, `order_items`, `stock_movements`.
 
@@ -21,22 +22,60 @@ Design notes:
 - `order_items` resolves the many-to-many relationship between orders and products, and stores a price snapshot so historical orders keep the price actually charged.
 - `stock_movements` keeps an auditable history of stock changes (signed quantities).
 
+## Highlights
+| Area | Result |
+|---|---|
+| Data integrity | 22 constraint tests, all invalid inserts rejected |
+| Access control | 4 least-privilege roles, 11 allow/deny tests |
+| Performance | Tested on about 1.4M rows; indexes chosen from `EXPLAIN (ANALYZE, BUFFERS)` evidence |
+| Backup | `pg_dump -Fc`, 18.6 MB dump, restore verified by row counts |
+| Recovery | Deleted 750,000 `order_items` rows and recovered them in about 12 s (RPO = last backup) |
+
+## Documentation
+- [Constraint testing](docs/constraint-testing.md)
+- [Analytical queries](docs/analytical-queries.md)
+- [Security and least privilege](docs/security.md)
+- [Performance tuning](docs/performance.md)
+- [Backup and recovery](docs/backup-recovery.md)
+- [Incident: accidental data deletion](incidents/data-recovery.md)
+
 ## Status
-- [x] Database design (ERD)
-- [x] Schema, constraints, sample data
+- [x] Database design (ERD) ([details](database/01_erd/erd.png))
+- [x] Schema, constraints, sample data ([details](database/02_tables.sql))
 - [x] Constraint testing ([details](docs/constraint-testing.md))
-- [x] Analytical queries ([details](docs/analytical-queries.md))
+- [x] Analytical queries and views ([details](docs/analytical-queries.md))
 - [x] Security roles and least privilege ([details](docs/security.md))
-- [x] Performance tuning ([details](docs/performance.md))
-- [ ] Backup and recovery (RPO/RTO)
-- [ ] Monitoring
-- [ ] Incident simulations
+- [x] Performance tuning (EXPLAIN ANALYZE, indexing) ([details](docs/performance.md))
+- [x] Backup and recovery (RPO/RTO) ([details](docs/backup-recovery.md))
+- [x] Incident simulation: accidental deletion ([details](incidents/data-recovery.md))
+- [ ] Monitoring (`pg_stat_*`)
+- [ ] Further incident write-ups (slow query, security)
+- [ ] Backup automation
 
 ## How to rebuild the database
-Run the scripts in `database/` in numeric order against a new database named `retail_operations`:
+Create an empty database named `retail_operations`, then run the scripts in `database/` in order:
 
-1. `01_database.sql`
-2. `02_tables.sql`
-3. `03_sample_data.sql`
+1. `02_tables.sql`
+2. `03_sample_data.sql`
+3. `04_queries.sql` (optional, analytical queries)
+4. `05_views.sql`
+5. `06_indexes.sql`
+6. `roles.sql` (security roles and grants)
 
-Constraint tests are in `tests/constraint_tests.sql`.
+Optional:
+- `data/generate_data.sql` loads about 1.4M rows for performance testing. It truncates existing data first.
+- `database/constraint_tests.sql` and `database/security_tests.sql` re-run the tests.
+- `performance/performance_experiments.sql` reproduces the index experiments.
+
+## Repository layout
+```
+database/      schema, sample data, queries, views, indexes, roles, tests
+data/          bulk data generator
+performance/   index experiments and EXPLAIN screenshots
+docs/          write-ups for each phase
+incidents/     incident reports
+screenshots/   evidence for each phase
+```
+
+## Known limitations
+Backups are manual and stored on the same machine, there is no point-in-time recovery (WAL archiving), backups are not encrypted, and roles are not included in the dump (use `pg_dumpall --globals-only`). See [Backup and recovery](docs/backup-recovery.md).
