@@ -48,7 +48,7 @@ Design notes:
 - [x] Performance tuning (EXPLAIN ANALYZE, indexing) ([details](docs/performance.md))
 - [x] Backup and recovery (RPO/RTO) ([details](docs/backup-recovery.md))
 - [x] Incident simulation: accidental deletion ([details](incidents/data-recovery.md))
-- [ ] Monitoring (`pg_stat_*`)
+- [x] Monitoring (pg_stat_*) ([details](docs/monitoring.md))
 - [ ] Further incident write-ups (slow query, security)
 - [ ] Backup automation
 
