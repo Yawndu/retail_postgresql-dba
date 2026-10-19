@@ -13,7 +13,7 @@ A small computer-hardware retailer with two warehouses needs to track customers,
 - `pg_dump` / `pg_restore`
 
 ## Database Design
-![ERD](database/01_erd/erd.png)
+![ERD](diagrams/erd.png)
 
 The model has 10 tables: `customers`, `categories`, `suppliers`, `products`, `warehouses`, `employees`, `inventory`, `orders`, `order_items`, `stock_movements`.
 
