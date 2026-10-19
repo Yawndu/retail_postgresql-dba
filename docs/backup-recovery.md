@@ -101,6 +101,36 @@ All rows of `order_items` were deleted on purpose to simulate an accident, then 
 
 Full details are in [`incidents/data-recovery.md`](../incidents/data-recovery.md).
 
+## 6. Automation: Backup and Restore Scripts
+
+The manual commands were wrapped in two scripts: [`backup/backup.bat`](../backup/backup.bat) and [`backup/restore.bat`](../backup/restore.bat).
+
+**`backup.bat`**
+- Writes a dated custom-format dump (`retail_operations_YYYY-MM-DD_HHmm.dump`).
+- Also exports the roles with `pg_dumpall --globals-only`, which the dump does not contain.
+- Checks that the dump is not empty and that `pg_restore --list` can read it.
+- Appends every run to `backup_log.txt` and removes dumps older than 14 days.
+- Holds no password. It runs with `-w` (never prompt), so the password comes from `pgpass.conf`, stored outside the repository.
+
+**`restore.bat`**
+- Restores a chosen dump into a separate database and prints row counts.
+- Refuses to restore into the live `retail_operations` database.
+
+**Test run (2026-10-19)**
+
+| Check | Result |
+|---|---|
+| Dump created | `retail_operations_2026-10-19_1445.dump`, 18,645,277 bytes |
+| Roles file created | `globals_2026-10-19_1445.sql` |
+| Log entry | `OK` with the dump name |
+| Restore into `retail_ops_scripttest` | customers 50,000; orders 300,000; order_items 750,000; products 2,000 |
+
+![Backup script run](../screenshots/backup-recovery/script_backup_run.png)
+![Backup files](../screenshots/backup-recovery/script_backup_files.png)
+![Restore row counts](../screenshots/backup-recovery/script_restore_counts.png)
+
+**Bug found while testing.** The first version of `restore.bat` stopped silently after creating the database. A `)` inside an error message placed in an `if (...)` block ended the block early. The error handling was rewritten with `goto` labels, and the script now reports the real cause (for example, "database already exists").
+
 ## RPO and RTO Assessment
 
 | Objective | Target | Result |
@@ -111,10 +141,10 @@ Full details are in [`incidents/data-recovery.md`](../incidents/data-recovery.md
 The RTO figures measure the restore command on a small database (about 18 MB). A real recovery also includes detecting the problem, deciding what to restore and verifying the result, and a larger database takes longer to restore.
 
 ## Limitations
-- **Backups are manual.** A scheduled daily job (for example Windows Task Scheduler running a backup script) is the next step.
+- **Backups are scripted but not yet scheduled.** `backup.bat` makes a backup in one command, but it still has to be started by hand until it is added to Windows Task Scheduler.
 - **The backup is on the same computer as the database.** A disk failure or theft could destroy both. A copy should also be kept on another device or in cloud storage.
 - **No point-in-time recovery.** Anything changed after the last backup is lost. Archiving the write-ahead log (WAL) would allow recovery to a chosen moment.
-- **Roles are not part of the dump.** The dump keeps permissions but not the roles themselves. Rebuilding on a new server also needs `pg_dumpall --globals-only`.
+- **Roles are not part of the dump.** `backup.bat` saves them separately with `pg_dumpall --globals-only`. That file must be restored on a new server before the dump, and it is not encrypted either.
 - **Backups are not encrypted.** The file contains all of the data.
 
 ## Findings
