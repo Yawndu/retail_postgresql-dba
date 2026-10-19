@@ -44,16 +44,16 @@ Tests use `SET ROLE` to act as each role without logging in, then `RESET ROLE` a
 
 | # | Role | What was attempted | Expected | Result |
 |---|---|---|---|---|
-| S1 | `readonly_user` | Delete all products | Denied | (fill in) |
-| S2 | `readonly_user` | Insert a category | Denied | (fill in) |
-| S3 | `readonly_user` | Read products | Allowed | (fill in) |
-| S4 | `reporting_user` | Read the raw `customers` table | Denied | (fill in) |
-| S5 | `reporting_user` | Read `v_customer_spending` | Allowed | (fill in) |
-| S6 | `application_user` | Delete an order | Denied | (fill in) |
-| S7 | `application_user` | Truncate `inventory` | Denied | (fill in) |
-| S8 | `application_user` | Read `employees` | Denied | (fill in) |
-| S9 | `application_user` | Drop `customers` | Denied | (fill in) |
-| S10 | `application_user` | Update inventory (then roll back) | Allowed | (fill in) |
+| S1 | `readonly_user` | Delete all products | Denied | Denied |
+| S2 | `readonly_user` | Insert a category | Denied | Denied |
+| S3 | `readonly_user` | Read products | Allowed | Allowed (3 rows) |
+| S4 | `reporting_user` | Read the raw `customers` table | Denied | Denied |
+| S5 | `reporting_user` | Read `v_customer_spending` | Allowed | Allowed (3 rows) |
+| S6 | `application_user` | Delete an order | Denied | Denied |
+| S7 | `application_user` | Truncate `inventory` | Denied | Denied |
+| S8 | `application_user` | Read `employees` | Denied | Denied |
+| S9 | `application_user` | Drop `customers` | Denied | Denied |
+| S10 | `application_user` | Update inventory (then roll back) | Allowed | Allowed (UPDATE 1) |
 | S11 | `database_admin` | Read `orders` | Allowed | Allowed |
 
 ## Test Details
@@ -68,7 +68,8 @@ RESET ROLE;
 **Expected:** permission denied for table products
 **Result**
 ```
-ERROR:  permission denied for table products 
+ERROR:  permission denied for table products
+SQL state: 42501
 ```
 ![S1](../screenshots/security/s01_readonly_delete_denied.png)
 
@@ -82,7 +83,8 @@ RESET ROLE;
 **Expected:** permission denied for table categories
 **Result**
 ```
-ERROR:  permission denied for table categories 
+ERROR:  permission denied for table categories
+SQL state: 42501
 ```
 ![S2](../screenshots/security/s02_readonly_insert_denied.png)
 
@@ -96,7 +98,8 @@ RESET ROLE;
 **Expected:** rows returned
 **Result**
 ```
-observe the screenshot below for the result.
+3 rows returned:
+ASUS Vivobook 15 (LAP-0001), Lenovo IdeaPad 3 (LAP-0002), 24-inch IPS Monitor (MON-0001)
 ```
 ![S3](../screenshots/security/s03_readonly_select_allowed.png)
 
@@ -110,7 +113,8 @@ RESET ROLE;
 **Expected:** permission denied for table customers
 **Result**
 ```
-ERROR:  permission denied for table customers 
+ERROR:  permission denied for table customers
+SQL state: 42501
 ```
 ![S4](../screenshots/security/s04_reporting_raw_table_denied.png)
 
@@ -124,7 +128,10 @@ RESET ROLE;
 **Expected:** rows returned, even though the role has no access to the underlying tables
 **Result**
 ```
-observe the screenshot below for the result.
+3 rows returned:
+Ana Cruz | 1 order | 60000.00
+Jose Reyes | 1 order | 28500.00
+Maria Santos | 0 orders | 0
 ```
 ![S5](../screenshots/security/s05_reporting_view_allowed.png)
 
@@ -138,7 +145,8 @@ RESET ROLE;
 **Expected:** permission denied for table orders
 **Result**
 ```
-ERROR:  permission denied for table orders 
+ERROR:  permission denied for table orders
+SQL state: 42501
 ```
 ![S6](../screenshots/security/s06_application_delete_denied.png)
 
@@ -152,7 +160,8 @@ RESET ROLE;
 **Expected:** permission denied for table inventory
 **Result**
 ```
-ERROR:  permission denied for table inventory 
+ERROR:  permission denied for table inventory
+SQL state: 42501
 ```
 ![S7](../screenshots/security/s07_application_truncate_denied.png)
 
@@ -166,7 +175,8 @@ RESET ROLE;
 **Expected:** permission denied for table employees
 **Result**
 ```
-ERROR:  permission denied for table employees 
+ERROR:  permission denied for table employees
+SQL state: 42501
 ```
 ![S8](../screenshots/security/s08_application_employees_denied.png)
 
@@ -180,7 +190,8 @@ RESET ROLE;
 **Expected:** must be owner of table customers
 **Result**
 ```
-ERROR:  must be owner of table customers 
+ERROR:  must be owner of table customers
+SQL state: 42501
 ```
 ![S9](../screenshots/security/s09_application_drop_denied.png)
 
@@ -195,7 +206,9 @@ ROLLBACK;
 **Expected:** `UPDATE 1`, then the `ROLLBACK` discards the change
 **Result**
 ```
-UPDATE 1 / ROLLBACK
+UPDATE 1
+Query returned successfully in 28 msec.
+(the ROLLBACK then discards the change)
 ```
 ![S10](../screenshots/security/s10_application_update_allowed.png)
 
